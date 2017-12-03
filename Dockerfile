@@ -17,7 +17,7 @@ ADD /myapp /myapp
 RUN pip install -r /myapp/requirements.txt
 
 # Expose listener port
-EXPOSE 5000
+EXPOSE 8080
 
 # Set the default directory where CMD will execute
 WORKDIR /myapp

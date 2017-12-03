@@ -115,21 +115,8 @@ def containers_remove_all():
     Force remove all containers - dangrous!
 
     """
+    docker('rm -f')
     resp = ''
-
-    # Use same code as listing all containers
-    containersList = docker('ps', '-a')
-    allContainers = docker_ps_to_array(containersList)
-    for i in allContainers:
-        if i["image"] == "mywebapp":
-            allContainers.remove(i)
-        else:
-            id = i["id"]
-            docker('rm', '-f', id)
-            if len(i) == 0:
-                resp += '{"id": "%s"}' % id
-            else:
-                resp += '{"id": "%s"}, ' % id
 
     return Response(response=resp, mimetype="application/json")
 
@@ -139,22 +126,8 @@ def images_remove_all():
     Force remove all images - dangrous!
 
     """
+ 
     resp = ''
-
-    #Copying code from deleting all containers
-    imagesList = docker('images')
-    allImages = docker_images_to_array(imagesList)
-    for i in allImages:
-        if i["id"] == "mywebapp" or i["id"] == "ubuntu":
-            allImages.remove(i)
-        else:
-            id = i["id"]
-            docker('rmi', '-f', id)
-            if len(i) == 0:
-                resp += '{"id": "%s"}' % id
-            else:
-                resp += '{"id": "%s"}, ' % id
-
     return Response(response=resp, mimetype="application/json")
 
 
@@ -205,8 +178,6 @@ def containers_update(id):
         state = body['state']
         if state == 'running':
             docker('restart', id)
-        elif state == 'stopped':
-            docker('stop', id)
     except:
         pass
 
@@ -221,21 +192,7 @@ def images_update(id):
     curl -s -X PATCH -H 'Content-Type: application/json' http://localhost:8080/images/7f2619ed1768 -d '{"tag": "test:1.0"}'
 
     """
-    body = request.get_json(force=True)
-    try:
-        tag = body['tag']
-        imagesList = docker('images')
-        allImages = docker_images_to_array(imagesList)
-        docker('tag', id, tag)
-        for i in allImages:
-            tag2 = i["tag"]
-            name = i["name"]
-            if i["id"] == id and tag2 != tag:
-                docker('rmi', name)
-
-    except:
-        pass
-    resp = '{"id": "%s"}' % id
+    resp = ''
     return Response(response=resp, mimetype="application/json")
 
 
