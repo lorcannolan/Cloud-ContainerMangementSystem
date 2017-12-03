@@ -32,6 +32,25 @@ DELETE /images                      Delete all images
 
 """
 
+@app.route('/nodes', methods=['GET'])
+def swarm_index():
+    """
+    List all nodes in the swarm
+    """
+    output = docker('node', 'ls')
+    resp = json.dumps(docker_ps_to_array(output))
+    return Response(response=resp, mimetype="application/json")
+
+
+@app.route('/services', methods=['GET'])
+def services_index():
+    """
+    List all services
+    """
+    output = docker('service', 'ls')
+    resp = json.dumps(docker_ps_to_array(output))
+    return Response(response=resp, mimetype="application/json")
+
 @app.route('/containers', methods=['GET'])
 def containers_index():
     """
@@ -49,7 +68,6 @@ def containers_index():
         output = docker('ps', '-a')
         resp = json.dumps(docker_ps_to_array(output))
 
-    #resp = ''
     return Response(response=resp, mimetype="application/json")
 
 @app.route('/images', methods=['GET'])
@@ -61,7 +79,7 @@ def images_index():
     """
     
     output = docker('images')
-    resp = json.dumps(docker_ps_to_array(output))
+    resp = json.dumps(docker_images_to_array(output))
 
     return Response(response=resp, mimetype="application/json")
 
@@ -145,15 +163,12 @@ def images_remove_all():
     imagesList = docker('images')
     allImages = docker_images_to_array(imagesList)
     for i in allImages:
-        if i["id"] == "mywebapp" or i["id"] == "ubuntu":
-            allImages.remove(i)
+        id = i["id"]
+        docker('rmi', '-f', id)
+        if len(i) == 0:
+            resp += '{"id": "%s"}' % id
         else:
-            id = i["id"]
-            docker('rmi', '-f', id)
-            if len(i) == 0:
-                resp += '{"id": "%s"}' % id
-            else:
-                resp += '{"id": "%s"}, ' % id
+            resp += '{"id": "%s"}, ' % id
 
     return Response(response=resp, mimetype="application/json")
 
@@ -229,9 +244,8 @@ def images_update(id):
         docker('tag', id, tag)
         for i in allImages:
             tag2 = i["tag"]
-            name = i["name"]
             if i["id"] == id and tag2 != tag:
-                docker('rmi', name)
+                docker('rmi', tag2)
 
     except:
         pass
